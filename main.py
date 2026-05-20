@@ -14,8 +14,12 @@ from src.evaluation import train_test_split_chronological, evaluate_all_recommen
 
 def main():
     print("Step 1: Data Loading and Wrangling")
-    filepath = 'data/online_retail_II.xlsx'
+    filepath = 'data/Online Retail.xlsx'
     df = load_and_clean_data(filepath)
+    print(df.head())
+    df.info()
+
+    return
     utility_matrix, user_map, item_map = build_utility_matrix(df)
     
     print("\nStep 2: EDA")

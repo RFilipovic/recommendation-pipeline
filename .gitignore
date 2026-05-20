@@ -1,2 +1,4 @@
 .aider*
 PLAN.md
+data
+src/__pycache__
