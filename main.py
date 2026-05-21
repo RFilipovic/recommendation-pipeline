@@ -16,14 +16,13 @@ def main():
     print("Step 1: Data Loading and Wrangling")
     filepath = 'data/Online Retail.xlsx'
     df = load_and_clean_data(filepath)
-    print(df.head())
-    df.info()
 
-    return
     utility_matrix, user_map, item_map = build_utility_matrix(df)
     
     print("\nStep 2: EDA")
     plot_long_tail_distribution(df)
+
+    return
     
     print("\nStep 3: Market-Basket Analysis")
     rules = perform_market_basket_analysis(df)
