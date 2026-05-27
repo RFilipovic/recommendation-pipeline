@@ -2,6 +2,7 @@
 Main orchestrator script for The Long-Tail Merchant project.
 Run this script to execute the entire pipeline.
 """
+import os
 import pandas as pd
 from src.data_loader import load_and_clean_data, build_utility_matrix
 from src.eda import plot_long_tail_distribution
@@ -21,6 +22,31 @@ def main():
     
     print("\nStep 2: EDA")
     plot_long_tail_distribution(df)
+
+    # ============================================================
+    # ADD THIS: Step 3: Market Basket Analysis
+    # ============================================================
+    print("\nStep 3: Market Basket Analysis")
+    rules = perform_market_basket_analysis(df)
+    
+    # Print summary statistics
+    print(f"\nTotal association rules found: {len(rules)}")
+    print(f"Average Lift: {rules['lift'].mean():.2f}")
+    print(f"Average Confidence: {rules['confidence'].mean():.2f}")
+    
+    # Print top 10 rules by lift
+    print("\n" + "="*80)
+    print("TOP 10 ASSOCIATION RULES (by Lift)")
+    print("="*80)
+    top_rules = rules.nlargest(10, 'lift')[['antecedents', 'consequents', 'support', 
+                                             'confidence', 'lift', 'interest']]
+    print(top_rules.to_string())
+    
+    # Optional: Save rules to CSV for later inspection
+    os.makedirs('output', exist_ok=True)
+    rules.to_csv('output/association_rules.csv', index=False)
+    print(f"\nAll rules saved to: output/association_rules.csv")
+    # ============================================================
 
     return
     
