@@ -2,3 +2,4 @@
 PLAN.md
 data
 src/__pycache__
+cache/
