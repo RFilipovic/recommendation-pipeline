@@ -1,17 +1,11 @@
-"""
-Main orchestrator script for The Long-Tail Merchant project.
-Run this script to execute the entire pipeline.
-"""
 import os
 import pandas as pd
 from src.data_loader import load_and_clean_data, build_utility_matrix
 from src.eda import plot_long_tail_distribution
 from src.basket_analysis import perform_market_basket_analysis
-# from src.minhash_lsh import get_k_shingles, build_minhash_signatures, lsh_jaccard, lsh_cosine
-# from src.clustering import apply_clustering
+
 from src.recommenders import ContentBasedRecommender, CollaborativeFilteringRecommender, LatentFactorRecommender
-# from src.hybrid_engine import HybridRecommender
-# from src.evaluation import train_test_split_chronological, evaluate_all_recommenders
+
 
 def main():
     print("Step 1: Data Loading and Wrangling")
@@ -49,22 +43,8 @@ def main():
     os.makedirs('output', exist_ok=True)
     rules.to_csv('output/association_rules.csv', index=False)
     print(f"\nAll rules saved to: output/association_rules.csv")
-
-    print("\nStep 4: Similarity & LSH")
-    print("Skipping Step 4: MinHash/LSH not yet implemented.")
-    # descriptions = df.drop_duplicates('StockCode')['Description'].tolist()
-    # shingles = get_k_shingles(descriptions)
-    # signatures = build_minhash_signatures(shingles)
-    # jaccard_candidates = lsh_jaccard(signatures)
-    # Cosine LSH requires TF-IDF vectors - implement vectorization before calling
-    # cosine_candidates = lsh_cosine(tfidf_matrix)
     
-    print("\nStep 5: Clustering")
-    print("Skipping Step 5: Clustering not yet implemented.")
-    # apply_clustering requires vectors - implement TF-IDF extraction before calling
-    # apply_clustering(vectors, vector_names)
-    
-    print("\nStep 6-9: Building Recommenders")
+    print("\nStep 4: Building Recommenders")
     # Updated ContentBasedRecommender initialization and fitting
     cb_rec = ContentBasedRecommender(df, n_components=100)
     cb_rec.fit()
