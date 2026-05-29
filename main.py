@@ -61,15 +61,47 @@ def main():
         desc = df[df['StockCode'] == stock_code]['Description'].iloc[0]
         print(f"{stock_code}: {desc}")
 
+    # ============================================================
+    # Collaborative Filtering Recommender Testing
+    # ============================================================
+    print("\n" + "="*80)
+    print("COLLABORATIVE FILTERING RECOMMENDER (Item-Item)")
+    print("="*80)
+    
+    cf_rec = CollaborativeFilteringRecommender(mode='item')
+    cf_rec.fit(utility_matrix, user_map, item_map)
+    
+    print(f"\nSample Collaborative Filtering Recommendations for User {sample_user}:")
+    cf_recommendations = cf_rec.predict(sample_user, top_k=5)
+    print(cf_recommendations)
+    
+    # Print descriptions for the recommended items
+    for stock_code in cf_recommendations:
+        desc = df[df['StockCode'] == stock_code]['Description'].iloc[0]
+        print(f"{stock_code}: {desc}")
+
+    # ============================================================
+    # Latent Factor Recommender Testing
+    # ============================================================
+    print("\n" + "="*80)
+    print("LATENT FACTOR RECOMMENDER (SVD)")
+    print("="*80)
+    
+    lf_rec = LatentFactorRecommender(n_factors=50)
+    lf_rec.fit(utility_matrix, user_map, item_map)
+    
+    print(f"\nSample Latent Factor Recommendations for User {sample_user}:")
+    lf_recommendations = lf_rec.predict(sample_user, top_k=5)
+    print(lf_recommendations)
+    
+    # Print descriptions for the recommended items
+    for stock_code in lf_recommendations:
+        desc = df[df['StockCode'] == stock_code]['Description'].iloc[0]
+        print(f"{stock_code}: {desc}")
+
     # The following recommenders are not yet implemented, so we return early.
     return
     
-    # cf_rec = CollaborativeFilteringRecommender(mode='item')
-    # cf_rec.fit(utility_matrix)
-    # 
-    # lf_rec = LatentFactorRecommender()
-    # lf_rec.fit(utility_matrix)
-    # 
     # hybrid_rec = HybridRecommender(cb_rec, cf_rec, lf_rec, lsh_candidates=jaccard_candidates)
     # 
     # print("\nStep 10: Evaluation")
