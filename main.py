@@ -3,6 +3,7 @@ import pandas as pd
 from src.data_loader import load_and_clean_data, build_utility_matrix
 from src.eda import plot_long_tail_distribution
 from src.basket_analysis import perform_market_basket_analysis
+from src.evaluation import train_test_split_chronological, evaluate_all_recommenders
 
 from src.recommenders import ContentBasedRecommender, CollaborativeFilteringRecommender, LatentFactorRecommender
 
@@ -99,17 +100,45 @@ def main():
         desc = df[df['StockCode'] == stock_code]['Description'].iloc[0]
         print(f"{stock_code}: {desc}")
 
-    # The following recommenders are not yet implemented, so we return early.
-    return
+    # ============================================================
+    # Step 5: Evaluation
+    # ============================================================
+    print("\n" + "="*80)
+    print("STEP 5: EVALUATION")
+    print("="*80)
     
-    # hybrid_rec = HybridRecommender(cb_rec, cf_rec, lf_rec, lsh_candidates=jaccard_candidates)
-    # 
-    # print("\nStep 10: Evaluation")
-    # train_df, test_df = train_test_split_chronological(df)
-    # evaluate_all_recommenders(
-    #     {'CB': cb_rec, 'CF': cf_rec, 'LF': lf_rec, 'Hybrid': hybrid_rec},
-    #     test_df, train_df
-    # )
+    # Split data chronologically
+    print("Splitting data chronologically for evaluation...")
+    train_df, test_df = train_test_split_chronological(df, test_days=30)
+    
+    # To avoid data leakage, we must rebuild the utility matrix and re-fit 
+    # the recommenders using ONLY the training data.
+    # We use a separate cache directory to ensure we don't load the full dataset's matrix.
+    print("Rebuilding utility matrix on training data only to prevent data leakage...")
+    eval_utility_matrix, eval_user_map, eval_item_map = build_utility_matrix(train_df, cache_dir='cache/eval')
+    
+    print("Re-fitting recommenders on training data only...")
+    eval_cb_rec = ContentBasedRecommender(train_df, n_components=100)
+    eval_cb_rec.fit()
+    eval_cb_rec.build_user_profiles(eval_utility_matrix, eval_user_map, eval_item_map)
+    
+    eval_cf_rec = CollaborativeFilteringRecommender(mode='item')
+    eval_cf_rec.fit(eval_utility_matrix, eval_user_map, eval_item_map)
+    
+    eval_lf_rec = LatentFactorRecommender(n_factors=50)
+    eval_lf_rec.fit(eval_utility_matrix, eval_user_map, eval_item_map)
+    
+    # Evaluate all recommenders
+    evaluate_all_recommenders(
+        recommenders_dict={
+            'Content-Based': eval_cb_rec, 
+            'Collaborative Filtering': eval_cf_rec, 
+            'Latent Factor': eval_lf_rec
+        },
+        test_df=test_df,
+        train_df=train_df,
+        k=10
+    )
 
 if __name__ == "__main__":
     main()
