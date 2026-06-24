@@ -8,7 +8,6 @@ class CollaborativeFilteringRecommender:
         self.utility_matrix = None
         self.user_mapping = None
         self.item_mapping = None
-        self.reverse_user_mapping = None
         self.reverse_item_mapping = None
         self.sim_matrix = None
         
@@ -17,7 +16,6 @@ class CollaborativeFilteringRecommender:
         self.utility_matrix = utility_matrix
         self.user_mapping = user_mapping
         self.item_mapping = item_mapping
-        self.reverse_user_mapping = {idx: user for user, idx in user_mapping.items()}
         self.reverse_item_mapping = {idx: stock for stock, idx in item_mapping.items()}
         
         if self.mode == 'item':

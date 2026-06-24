@@ -25,14 +25,7 @@ def main():
     print("\nStep 5: Hybrid Recommender (CF -> Association Rules)")
     hybrid_rec = HybridRecommender(cf_rec, rule_miner)
 
-    sample_user = list(user_map.keys())[0]
-    print(f"\nRecommendations for User {sample_user}:")
-    cf_items, rule_items = hybrid_rec.recommend(sample_user, cf_k=5, rules_per_item=3)
-
-    # ============================================================
-    # Step 6: Export all recommendations to file
-    # ============================================================
-    print("\nExporting recommendations for all users...")
+    print("\nStep 6: Exporting recommendations for all users...")
     os.makedirs('output', exist_ok=True)
     item_lookup = dict(zip(df['StockCode'], df['Description']))
     rows = []
