@@ -1,26 +1,54 @@
-# The Long-Tail Merchant: Architecture & Big Data Considerations
+# E-Commerce Recommendation Engine: Collaborative Filtering + Association Rules
 
-## 1. Data Storage Architecture
-For a production system handling the UCI Online Retail dataset and scaling to larger e-commerce datasets, a hybrid data storage architecture is required:
-- **Relational Database (PostgreSQL/MySQL)**: Used for transactional data (Invoices, Customers, StockCodes). This ensures ACID compliance for order processing and allows efficient joins for generating the utility matrix.
-- **Key-Value Store (Redis)**: Used for caching pre-computed recommendation lists and storing MinHash/LSH signatures. LSH requires fast O(1) bucket lookups, which Redis hash sets provide perfectly.
-- **Search Engine / Vector Database (Elasticsearch / Milvus)**: Used for storing TF-IDF and LSI vectors. Enables fast approximate nearest neighbor (ANN) searches for content-based filtering and Cosine LSH.
+## 1. Project Overview
 
-## 2. The 3Vs of Big Data Considerations
-- **Volume**: The UCI dataset is relatively small (~1M rows), but a real e-commerce dataset has billions of rows. The utility matrix (Users × Items) is extremely sparse (>99% sparse). Storing this as a dense matrix is impossible. We must use `scipy.sparse` matrices and distributed computing frameworks (like Spark) for matrix factorization.
-- **Velocity**: Recommendations must be generated in milliseconds. Brute-force similarity search across millions of items is too slow. This necessitates LSH for sub-linear time candidate retrieval, and Redis caching for pre-computed user top-K lists.
-- **Variety**: E-commerce data includes structured transaction data, semi-structured logs, and unstructured product descriptions. The hybrid engine fuses structured data (CF) with unstructured data (Content/TF-IDF) to provide robust recommendations.
+This project builds a **hybrid e-commerce recommendation engine** that combines two complementary techniques:
 
-## 3. The S-Curve for LSH Tuning
-Locality Sensitive Hashing relies on the AND-OR construction. We divide signatures into $b$ bands of $r$ rows. The probability that a pair of items with Jaccard similarity $s$ becomes a candidate pair is given by:
-$$ P(s) = 1 - (1 - s^r)^b $$
+- **Item-Item Collaborative Filtering**: Recommends products based on what similar users purchased — captures **personalized taste patterns** across transactions.
+- **Association Rules (Apriori)**: Recommends products frequently bought together in the same basket — captures **co-purchase intent** within a single transaction.
 
-This forms an S-Curve (sigmoid shape). 
-- **Tuning**: If we want to catch items with similarity > 0.5, we choose $b$ and $r$ such that the S-curve steepens around $s=0.5$. 
-- **False Positives/Negatives**: A flatter curve results in more false positives (items hashed together but not similar). A steeper curve reduces false positives but might increase false negatives. By adjusting $b$ and $r$, we balance the trade-off between computational efficiency (fewer candidates to check) and recall (not missing true similar items).
+The **Hybrid Recommender** merges both signals into a single ranked list, producing recommendations that are both personalized and contextually relevant.
 
-## 4. Why a Hybrid Approach?
-The "Long-Tail" problem plagues e-commerce: a few items are purchased frequently, while the vast majority are rarely purchased.
-- **Collaborative Filtering (CF)** excels at finding complex user behavior patterns for popular items but suffers from the **Cold-Start Problem**—it cannot recommend long-tail items because there is insufficient co-purchase data.
-- **Content-Based Filtering (CB)** excels at cold-start because it relies on item descriptions, but it tends to create "filter bubbles" (only recommending items identical to what the user already bought).
-- **The Hybrid Solution**: By dynamically weighting CB and CF scores based on item popularity and user history density, we leverage CF for popular items and CB for long-tail items. LSH acts as a fast candidate retrieval layer, ensuring the system scales linearly with the catalog size rather than quadratically.
+## 2. Dataset
+
+**UCI Online Retail Dataset** — ~500K transactions from a UK-based online retailer (Dec 2010 – Dec 2011). Each row represents a purchased item within an invoice, including CustomerID, StockCode, Description, Quantity, and InvoiceDate.
+
+## 3. Two Signals, One Engine
+
+| | Item-Item CF | Association Rules |
+|---|---|---|
+| **Question answered** | "What will this user likely buy?" | "What do people buy *with* this item?" |
+| **Signal source** | User purchase vectors across all transactions | Items co-occurring in the same basket (InvoiceNo) |
+| **Scope** | Long-term user preferences | Impulse add-ons and complements |
+| **Personalization** | High — tailored to each user | Low — same rules apply to everyone |
+
+These signals are complementary: CF captures *who you are*, association rules capture *what goes together*. The hybrid leverages both.
+
+## 4. Pipeline
+
+1. **Data Cleaning**: Drop NaN CustomerIDs, remove returns (Quantity ≤ 0), normalize descriptions.
+2. **Utility Matrix**: Users × Items sparse matrix of purchase quantities.
+3. **Apriori**: Mine frequent itemsets from baskets (grouped by InvoiceNo), extract high-lift rules.
+4. **Item-Item CF**: Compute item cosine similarity, score items for each user.
+5. **Hybrid**: For each user, get CF top-K picks, then expand each pick with association rule consequents. Score = weighted blend of normalized CF rank and rule confidence × lift.
+6. **Evaluation**: Chronological train/test split (last 30 days = test). Compare Precision@K and Recall@K for CF-only, Rules-only, and Hybrid.
+
+## 5. Association Rules — Key Concepts
+
+- **Support**: Fraction of baskets containing the itemset. Filters out rare combinations.
+- **Confidence**: P(consequent | antecedent). Measures reliability of the rule.
+- **Lift**: P(consequent | antecedent) / P(consequent). Values > 1 indicate the antecedent *increases* the likelihood of the consequent beyond baseline. High-lift rules are the most interesting — they reveal non-obvious co-purchase patterns.
+
+## 6. Hybrid Scoring
+
+For each candidate item:
+
+```
+score = cf_weight × (normalized_CF_rank) + rule_weight × (normalized_confidence × lift)
+```
+
+- Items appearing in both CF and rule outputs get both signals boosted.
+- Items only from CF still appear (personalized picks).
+- Items only from rules still appear ("frequently bought together" discoveries).
+
+Default weights: 70% CF, 30% rules — personalization drives the list, but rules surface complementary items CF might miss.
