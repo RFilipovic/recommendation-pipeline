@@ -1,3 +1,4 @@
+import os
 import pandas as pd
 from src.data_loader import load_and_clean_data, build_utility_matrix
 from src.recommenders import CollaborativeFilteringRecommender
@@ -43,6 +44,48 @@ def main():
             print(f"         confidence={r['confidence']:.2f}, lift={r['lift']:.2f}")
     else:
         print("    No rules triggered for this user's CF items.")
+
+    # ============================================================
+    # Step 6: Export all recommendations to file
+    # ============================================================
+    print("\nExporting recommendations for all users...")
+    os.makedirs('output', exist_ok=True)
+    item_lookup = dict(zip(df['StockCode'], df['Description']))
+    rows = []
+
+    for user_id in user_map.keys():
+        cf_items, rule_items = hybrid_rec.recommend(user_id, cf_k=5, rules_per_item=3)
+
+        for rank, code in enumerate(cf_items, 1):
+            rows.append({
+                'CustomerID': user_id,
+                'Rank': rank,
+                'StockCode': code,
+                'Description': item_lookup.get(code, 'Unknown'),
+                'Source': 'CF',
+                'TriggeredBy': '',
+                'Confidence': '',
+                'Lift': ''
+            })
+
+        for r in rule_items:
+            rows.append({
+                'CustomerID': user_id,
+                'Rank': '',
+                'StockCode': r['stock_code'],
+                'Description': r['description'],
+                'Source': 'RULE',
+                'TriggeredBy': r['triggered_by'],
+                'Confidence': round(r['confidence'], 4),
+                'Lift': round(r['lift'], 4)
+            })
+
+    output_df = pd.DataFrame(rows)
+    output_path = 'output/hybrid_recommendations_all_users.csv'
+    output_df.to_csv(output_path, index=False)
+    print(f"  Exported {len(rows)} recommendations for {len(user_map)} users to {output_path}")
+
+    print("\nDone!")
 
 
 if __name__ == "__main__":

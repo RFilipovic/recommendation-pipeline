@@ -11,7 +11,7 @@ class HybridRecommender:
 
     def recommend(self, user_id, cf_k=5, rules_per_item=3):
         if user_id not in self.user_mapping:
-            return [], [], []
+            return [], []
 
         user_idx = self.user_mapping[user_id]
         purchased_idx = self.utility_matrix[user_idx].nonzero()[1]
