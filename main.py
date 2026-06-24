@@ -29,21 +29,6 @@ def main():
     print(f"\nRecommendations for User {sample_user}:")
     cf_items, rule_items = hybrid_rec.recommend(sample_user, cf_k=5, rules_per_item=3)
 
-    print("\n  CF Recommendations:")
-    for code in cf_items:
-        desc = df[df['StockCode'] == code]['Description'].iloc[0]
-        print(f"    {code}: {desc}")
-
-    print("\n  Association Rule Suggestions (triggered by CF items):")
-    if rule_items:
-        for r in rule_items:
-            trigger_desc = df[df['StockCode'] == r['triggered_by']]['Description'].iloc[0]
-            print(f"    {r['stock_code']}: {r['description']}")
-            print(f"      <- because you might like {r['triggered_by']} ({trigger_desc})")
-            print(f"         confidence={r['confidence']:.2f}, interest={r['interest']:.2f}")
-    else:
-        print("    No rules triggered for this user's CF items.")
-
     # ============================================================
     # Step 6: Export all recommendations to file
     # ============================================================

@@ -31,10 +31,6 @@ class AssociationRuleMiner:
             fill_value=0
         )
         basket_matrix = basket_matrix.astype(bool)
-        self.num_baskets = len(basket_matrix)
-
-        print(f"Basket matrix shape: {basket_matrix.shape}")
-        print(f"Running Apriori with min_support={self.min_support}...")
 
         frequent_itemsets = apriori(
             basket_matrix,
@@ -42,7 +38,6 @@ class AssociationRuleMiner:
             use_colnames=True,
             low_memory=True
         )
-        print(f"Found {len(frequent_itemsets)} frequent itemsets.")
 
         if frequent_itemsets.empty:
             print("No frequent itemsets found. Try lowering min_support.")
@@ -50,7 +45,6 @@ class AssociationRuleMiner:
             self.item_descriptions = {}
             return self
 
-        print("Mining association rules...")
         rules = association_rules(
             frequent_itemsets,
             metric='confidence',
