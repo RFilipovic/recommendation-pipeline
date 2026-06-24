@@ -3,16 +3,7 @@ import pandas as pd
 from typing import Dict, List, Set, Tuple, Any
 
 def train_test_split_chronological(df: pd.DataFrame, test_days: int = 30) -> Tuple[pd.DataFrame, pd.DataFrame]:
-    """
-    Splits data chronologically into training and testing sets.
-    
-    Args:
-        df: The cleaned pandas DataFrame containing transaction data.
-        test_days: The number of days from the end of the dataset to include in the test set.
-        
-    Returns:
-        A tuple of (train_df, test_df).
-    """
+
     # Ensure InvoiceDate is datetime
     df = df.copy()
     df['InvoiceDate'] = pd.to_datetime(df['InvoiceDate'])
@@ -33,17 +24,7 @@ def train_test_split_chronological(df: pd.DataFrame, test_days: int = 30) -> Tup
     return train_df, test_df
 
 def precision_at_k(recommended_items: List[Any], relevant_items: Set[Any], k: int = 10) -> float:
-    """
-    Computes Precision@K.
-    
-    Args:
-        recommended_items: A list of recommended item IDs.
-        relevant_items: A set of ground truth relevant item IDs.
-        k: The number of top recommendations to consider.
-        
-    Returns:
-        The precision at k score.
-    """
+
     if k == 0:
         return 0.0
         
@@ -60,17 +41,7 @@ def precision_at_k(recommended_items: List[Any], relevant_items: Set[Any], k: in
     return precision
 
 def recall_at_k(recommended_items: List[Any], relevant_items: Set[Any], k: int = 10) -> float:
-    """
-    Computes Recall@K.
-    
-    Args:
-        recommended_items: A list of recommended item IDs.
-        relevant_items: A set of ground truth relevant item IDs.
-        k: The number of top recommendations to consider.
-        
-    Returns:
-        The recall at k score.
-    """
+
     # Handle the case where a user has no relevant items in the test set
     if len(relevant_items) == 0:
         return 0.0
@@ -93,18 +64,7 @@ def evaluate_all_recommenders(
     train_df: pd.DataFrame, 
     k: int = 10
 ) -> Dict[str, Dict[str, float]]:
-    """
-    Evaluates all recommenders and prints a comparison.
-    
-    Args:
-        recommenders_dict: A dictionary mapping recommender names to recommender objects.
-        test_df: The test set DataFrame.
-        train_df: The train set DataFrame.
-        k: The number of top recommendations to evaluate.
-        
-    Returns:
-        A dictionary containing the evaluation metrics for each recommender.
-    """
+
     # 1. For each user in test_df, get their ground truth relevant items from test_df.
     test_users = test_df['CustomerID'].unique()
     train_users = set(train_df['CustomerID'].unique())

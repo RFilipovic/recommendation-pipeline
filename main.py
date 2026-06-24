@@ -1,8 +1,6 @@
-import os
 import pandas as pd
 from src.data_loader import load_and_clean_data, build_utility_matrix
 from src.eda import plot_long_tail_distribution
-from src.basket_analysis import perform_market_basket_analysis
 from src.evaluation import train_test_split_chronological, evaluate_all_recommenders
 
 from src.recommenders import ContentBasedRecommender, CollaborativeFilteringRecommender, LatentFactorRecommender
@@ -13,7 +11,6 @@ def main():
     filepath = 'data/Online Retail.xlsx'
     df = load_and_clean_data(filepath)
     
-    # Save the filtered data to a new CSV file in the data/ subdirectory for inspection
     filtered_data_path = 'data/filtered_online_retail.csv'
     print(f"Exporting filtered data to {filtered_data_path} for review...")
     df.to_csv(filtered_data_path, index=False)
@@ -23,30 +20,8 @@ def main():
     
     print("\nStep 2: EDA")
     plot_long_tail_distribution(df)
-
-    print("\nStep 3: Market Basket Analysis")
-    rules = perform_market_basket_analysis(df)
     
-    # Print summary statistics
-    print(f"\nTotal association rules found: {len(rules)}")
-    print(f"Average Lift: {rules['lift'].mean():.2f}")
-    print(f"Average Confidence: {rules['confidence'].mean():.2f}")
-    
-    # Print top 10 rules by lift
-    print("\n" + "="*80)
-    print("TOP 10 ASSOCIATION RULES (by Lift)")
-    print("="*80)
-    top_rules = rules.nlargest(10, 'lift')[['antecedents', 'consequents', 'support', 
-                                             'confidence', 'lift', 'interest']]
-    print(top_rules.to_string())
-    
-    # Optional: Save rules to CSV for later inspection
-    os.makedirs('output', exist_ok=True)
-    rules.to_csv('output/association_rules.csv', index=False)
-    print(f"\nAll rules saved to: output/association_rules.csv")
-    
-    print("\nStep 4: Building Recommenders")
-    # Updated ContentBasedRecommender initialization and fitting
+    print("\nStep 3: Building Recommenders")
     cb_rec = ContentBasedRecommender(df, n_components=100)
     cb_rec.fit()
     cb_rec.build_user_profiles(utility_matrix, user_map, item_map)
@@ -101,10 +76,10 @@ def main():
         print(f"{stock_code}: {desc}")
 
     # ============================================================
-    # Step 5: Evaluation
+    # Step 4: Evaluation
     # ============================================================
     print("\n" + "="*80)
-    print("STEP 5: EVALUATION")
+    print("STEP 4: EVALUATION")
     print("="*80)
     
     # Split data chronologically
