@@ -15,7 +15,7 @@ def main():
     utility_matrix, user_map, item_map = build_utility_matrix(df)
 
     print("\nStep 3: Mining Association Rules")
-    rule_miner = AssociationRuleMiner(min_support=0.01, min_confidence=0.3, min_lift=1.0)
+    rule_miner = AssociationRuleMiner(min_support=0.01, min_confidence=0.3, min_interest=0.0)
     rule_miner.fit(df)
     rule_miner.print_top_rules(n=10)
 
@@ -41,7 +41,7 @@ def main():
             trigger_desc = df[df['StockCode'] == r['triggered_by']]['Description'].iloc[0]
             print(f"    {r['stock_code']}: {r['description']}")
             print(f"      <- because you might like {r['triggered_by']} ({trigger_desc})")
-            print(f"         confidence={r['confidence']:.2f}, lift={r['lift']:.2f}")
+            print(f"         confidence={r['confidence']:.2f}, interest={r['interest']:.2f}")
     else:
         print("    No rules triggered for this user's CF items.")
 
@@ -65,7 +65,7 @@ def main():
                 'Source': 'CF',
                 'TriggeredBy': '',
                 'Confidence': '',
-                'Lift': ''
+                'Interest': ''
             })
 
         for r in rule_items:
@@ -77,7 +77,7 @@ def main():
                 'Source': 'RULE',
                 'TriggeredBy': r['triggered_by'],
                 'Confidence': round(r['confidence'], 4),
-                'Lift': round(r['lift'], 4)
+                'Interest': round(r['interest'], 4)
             })
 
     output_df = pd.DataFrame(rows)

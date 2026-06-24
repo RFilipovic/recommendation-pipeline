@@ -1,9 +1,9 @@
 class HybridRecommender:
-    def __init__(self, cf_recommender, rule_miner, min_confidence=0.3, min_lift=1.0):
+    def __init__(self, cf_recommender, rule_miner, min_confidence=0.3, min_interest=0.0):
         self.cf = cf_recommender
         self.rule_miner = rule_miner
         self.min_confidence = min_confidence
-        self.min_lift = min_lift
+        self.min_interest = min_interest
         self.utility_matrix = cf_recommender.utility_matrix
         self.user_mapping = cf_recommender.user_mapping
         self.item_mapping = cf_recommender.item_mapping
@@ -25,7 +25,7 @@ class HybridRecommender:
             for c in consequents:
                 if (c['stock_code'] not in purchased
                         and c['confidence'] >= self.min_confidence
-                        and c['lift'] >= self.min_lift
+                        and c['interest'] >= self.min_interest
                         and c['stock_code'] not in cf_recs
                         and c['stock_code'] not in [r['stock_code'] for r in rule_recs]):
                     rule_recs.append({**c, 'triggered_by': cf_item})

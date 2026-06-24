@@ -5,10 +5,10 @@ import joblib
 
 
 class AssociationRuleMiner:
-    def __init__(self, min_support=0.01, min_confidence=0.3, min_lift=1.0):
+    def __init__(self, min_support=0.01, min_confidence=0.3, min_interest=0.0):
         self.min_support = min_support
         self.min_confidence = min_confidence
-        self.min_lift = min_lift
+        self.min_interest = min_interest
         self.rules_df = None
         self.item_descriptions = None
 
@@ -32,6 +32,7 @@ class AssociationRuleMiner:
             fill_value=0
         )
         basket_matrix = basket_matrix.astype(bool)
+        self.num_baskets = len(basket_matrix)
 
         print(f"Basket matrix shape: {basket_matrix.shape}")
         print(f"Running Apriori with min_support={self.min_support}...")
@@ -51,14 +52,17 @@ class AssociationRuleMiner:
             return self
 
         print("Mining association rules...")
-        self.rules_df = association_rules(
+        rules = association_rules(
             frequent_itemsets,
             metric='confidence',
             min_threshold=self.min_confidence
         )
 
-        self.rules_df = self.rules_df[self.rules_df['lift'] >= self.min_lift]
-        self.rules_df = self.rules_df.sort_values('lift', ascending=False).reset_index(drop=True)
+        # Interest = confidence - consequent_support
+        rules['interest'] = rules['confidence'] - rules['consequent support']
+
+        self.rules_df = rules[rules['interest'] >= self.min_interest]
+        self.rules_df = self.rules_df.sort_values('interest', ascending=False).reset_index(drop=True)
 
         item_info = df.drop_duplicates('StockCode')[['StockCode', 'Description']]
         self.item_descriptions = dict(zip(item_info['StockCode'], item_info['Description']))
@@ -76,8 +80,8 @@ class AssociationRuleMiner:
         print(f"Total rules: {len(self.rules_df)}")
         if not self.rules_df.empty:
             print(f"Avg confidence: {self.rules_df['confidence'].mean():.4f}")
-            print(f"Avg lift:       {self.rules_df['lift'].mean():.4f}")
-            print(f"Max lift:       {self.rules_df['lift'].max():.4f}")
+            print(f"Avg interest:   {self.rules_df['interest'].mean():.4f}")
+            print(f"Max interest:   {self.rules_df['interest'].max():.4f}")
         print(f"{'='*50}\n")
 
     def get_consequents(self, stock_code, top_n=5):
@@ -97,7 +101,8 @@ class AssociationRuleMiner:
                     consequents.append({
                         'stock_code': item,
                         'confidence': row['confidence'],
-                        'lift': row['lift'],
+                        'interest': row['interest'],
+                        'support': row['support'],
                         'description': self.item_descriptions.get(item, 'Unknown')
                     })
                 if len(consequents) >= top_n:
@@ -118,7 +123,7 @@ class AssociationRuleMiner:
                     seen.add(r['stock_code'])
                     all_consequents.append(r)
 
-        all_consequents.sort(key=lambda x: x['lift'], reverse=True)
+        all_consequents.sort(key=lambda x: x['interest'], reverse=True)
         return all_consequents
 
     def recommend_from_history(self, purchased_items, top_k=10):
@@ -140,12 +145,12 @@ class AssociationRuleMiner:
             print("No rules available.")
             return
 
-        print(f"\nTop {n} Association Rules by Lift:")
+        print(f"\nTop {n} Association Rules by Interest:")
         print(f"{'='*90}")
         for i, (_, row) in enumerate(self.rules_df.head(n).iterrows()):
             ant = ', '.join([self.item_descriptions.get(a, a) for a in row['antecedents']])
             cons = ', '.join([self.item_descriptions.get(c, c) for c in row['consequents']])
             print(f"{i+1}. {ant}")
             print(f"   → {cons}")
-            print(f"   (support={row['support']:.4f}, confidence={row['confidence']:.4f}, lift={row['lift']:.2f})")
+            print(f"   (support={row['support']:.4f}, confidence={row['confidence']:.4f}, interest={row['interest']:.4f})")
             print()
