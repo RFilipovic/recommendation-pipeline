@@ -17,7 +17,6 @@ def main():
     print("\nStep 3: Mining Association Rules")
     rule_miner = AssociationRuleMiner(min_support=0.01, min_confidence=0.3, min_interest=0.0)
     rule_miner.fit(df)
-    rule_miner.print_top_rules(n=10)
 
     print("\nStep 4: Fitting Item-Item Collaborative Filtering")
     cf_rec = CollaborativeFilteringRecommender(mode='item')
