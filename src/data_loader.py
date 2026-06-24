@@ -34,21 +34,6 @@ def load_and_clean_data(filepath, cache_dir='cache'):
     
     return df
 
-def _print_matrix_stats(utility_matrix, user_mapping, item_mapping):
-    """Helper to print utility matrix statistics consistently."""
-    num_users, num_items = utility_matrix.shape
-    num_non_zero = utility_matrix.nnz
-    sparsity = 1 - (num_non_zero / (num_users * num_items))
-
-    print(f"\n{'='*50}")
-    print(f"UTILITY MATRIX STATISTICS")
-    print(f"{'='*50}")
-    print(f"Shape: {num_users} users x {num_items} items")
-    print(f"Non-zero entries: {num_non_zero:,}")
-    print(f"Total entries: {num_users * num_items:,}")
-    print(f"Sparsity: {sparsity:.4%}") 
-    print(f"{'='*50}\n")
-
 def build_utility_matrix(df, cache_dir='cache'):
 
     os.makedirs(cache_dir, exist_ok=True)
@@ -58,7 +43,6 @@ def build_utility_matrix(df, cache_dir='cache'):
     if os.path.exists(cache_path):
         print("Used results from cache for utility matrix.")
         utility_matrix, user_mapping, item_mapping = joblib.load(cache_path)
-        _print_matrix_stats(utility_matrix, user_mapping, item_mapping)
         return utility_matrix, user_mapping, item_mapping
 
     print("Building utility matrix...")
@@ -77,8 +61,6 @@ def build_utility_matrix(df, cache_dir='cache'):
     item_mapping = {stock_code: idx for idx, stock_code in enumerate(pivot_table.columns)}
 
     utility_matrix = sp.csr_matrix(pivot_table.values)
-
-    _print_matrix_stats(utility_matrix, user_mapping, item_mapping)
     
     data_to_cache = (utility_matrix, user_mapping, item_mapping)
     joblib.dump(data_to_cache, cache_path)

@@ -19,7 +19,6 @@ class AssociationRuleMiner:
         if os.path.exists(cache_path):
             print("Loaded association rules from cache.")
             self.rules_df, self.item_descriptions = joblib.load(cache_path)
-            self._print_stats()
             return self
 
         print("Building basket matrix for Apriori...")
@@ -69,20 +68,8 @@ class AssociationRuleMiner:
 
         joblib.dump((self.rules_df, self.item_descriptions), cache_path)
         print("Saved association rules to cache.")
-        self._print_stats()
 
         return self
-
-    def _print_stats(self):
-        print(f"\n{'='*50}")
-        print("ASSOCIATION RULES STATISTICS")
-        print(f"{'='*50}")
-        print(f"Total rules: {len(self.rules_df)}")
-        if not self.rules_df.empty:
-            print(f"Avg confidence: {self.rules_df['confidence'].mean():.4f}")
-            print(f"Avg interest:   {self.rules_df['interest'].mean():.4f}")
-            print(f"Max interest:   {self.rules_df['interest'].max():.4f}")
-        print(f"{'='*50}\n")
 
     def get_consequents(self, stock_code, top_n=5):
         if self.rules_df is None or self.rules_df.empty:
