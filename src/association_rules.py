@@ -51,7 +51,6 @@ class AssociationRuleMiner:
             min_threshold=self.min_confidence
         )
 
-        # Interest = confidence - consequent_support
         rules['interest'] = rules['confidence'] - rules['consequent support']
 
         self.rules_df = rules[rules['interest'] >= self.min_interest]

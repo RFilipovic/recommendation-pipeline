@@ -24,7 +24,7 @@ def load_and_clean_data(filepath, cache_dir='cache'):
     # 3. Drop rows where 'Quantity' <= 0
     df = df[df['Quantity'] > 0]
     
-    # 4. Normalize 'Description': drop NaNs, convert to string, strip whitespace, uppercase
+    # 4. Drop rows where 'CustomerID' is NaN, convert to string, strip whitespace, uppercase
     df = df.dropna(subset=['Description'])
     df['Description'] = df['Description'].astype(str).str.strip().str.upper()
     
@@ -50,11 +50,11 @@ def build_utility_matrix(df, cache_dir='cache'):
     grouped = df.groupby(['CustomerID', 'StockCode'])['Quantity'].sum().reset_index()
 
     pivot_table = grouped.pivot_table(
-        index='CustomerID',      # rows = users
-        columns='StockCode',     # columns = items
-        values='Quantity',       # values = purchase quantity
-        aggfunc='sum',           # (already summed, but safe to keep)
-        fill_value=0             # NaN -> 0 (user didn't buy this item)
+        index='CustomerID',      
+        columns='StockCode',     
+        values='Quantity',       
+        aggfunc='sum',           
+        fill_value=0             
     )
 
     user_mapping = {customer_id: idx for idx, customer_id in enumerate(pivot_table.index)}

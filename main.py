@@ -7,7 +7,7 @@ from src.hybrid_recommender import HybridRecommender
 
 
 def main():
-    print("Step 1: Data Loading and Wrangling")
+    print("Step 1: Data Loading and processing")
     filepath = 'data/Online Retail.xlsx'
     df = load_and_clean_data(filepath)
 
